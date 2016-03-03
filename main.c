@@ -38,9 +38,9 @@ int main(void) {
   while (true) {
     palToggleLine (LINE_C00_LED1);
     if palReadLine (LINE_C01_SWITCH1) {
-	chThdSleepMilliseconds(100);
+	chThdSleepMilliseconds (100);
       } else {
-	chThdSleepMilliseconds(1000);
+	chThdSleepMilliseconds (1000);
     }
   }
 }
