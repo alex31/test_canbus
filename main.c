@@ -36,9 +36,11 @@ int main(void) {
 
 
   while (true) {
-    palSetPad (GPIOC, PC00_LED1);
-    chThdSleepMilliseconds(500);
-    palClearPad (GPIOC, PC00_LED1);
-    chThdSleepMilliseconds(500);
+    palToggleLine (LINE_C00_LED1);
+    if palReadLine (LINE_C01_SWITCH1) {
+	chThdSleepMilliseconds(100);
+      } else {
+	chThdSleepMilliseconds(1000);
+    }
   }
 }
