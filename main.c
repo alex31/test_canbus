@@ -1,49 +1,82 @@
 #include <ch.h>
 #include <hal.h>
-#include <ctype.h>
+#include "globalVar.h"
+#include "stdutil.h"
+#include "ttyConsole.h"
+
 
 /*
-° connecter B6 (uart1_tx) sur ftdi rx AVEC UN JUMPER
-  
-° connecter B7 (uart1_rx) sur ftdi tx AVEC UN JUMPER
-  
-° connecter C0 sur led0
-  
-° ouvrir le projet devbm4_tp02_echo : le programme fourni écoute les caractères qui arrivent    
-  sur la liaison série, et les renvoie à l’émetteur.
-  
-° ouvrir le fichier source main.c, et trouver la vitesse  de la liaison série.
-  dans eclipse, perspective debug ouvrir le terminal, et le connecter en appliquant les 
-  paramètres trouvés dans la question au dessus. 
+  Câbler une LED sur la broche C0
 
-  + (on accède au paramètres en cliquant sur la bouton qui en bas à droite qui représente un terminal)
-  + le port est /dev/bmp_tty sous linux
-  + une fois configuré, le terminal dans eclipse envoie les caractères tapés au clavier sur la 
-    liaison série associée au convertisseur usb-serie, et affiche les caractères 
-    en provenance de ce même convertisseur.
- 
-° make project
-° debug project
+Câbler sur la carte de dev le chip convertisseur USB série :
 
-° modifier le programme pour renvoyer les lettres en majuscules
-  + vous pouvez utiliser la fonction de la librairie standard  toupper
+ftdi RX sur B6 (utiliser un jumper)
+ftdi TX sur B7 (utiliser un jumper)
 
-° commenter les 2 lignes palSetLineMode qui effectuent l'initialisation dynamique
-  et editer le fichier board.h pour à la place configurer statiquement la liaison série
-  
-° comment faire pour rendre le clignotement de la led indépendant de l’écho de caractères ?
-  
-° rendre le clignotement de la LED indépendant de l’écho de caractères
+compiler, flasher le projet
+vérifier que la LED clignote
 
-*/
+lancer le terminal dans eclipse
+tester le shell
+<tab> à l'invite de commande donne la liste des commandes possibles, une fois les premiers 
+caractères tapés, <tab> génère l'autocompletion
+tester les commandes « info » et « threads » (la colonne frestk donne la place libre sur la pile)
+
+éditer le fichier main.c
+après  la ligne chRegSetThreadName("blinker"); commenter la ligne
+ int prendDeLaPlaceSurLaPile[40] __attribute__((unused));
+
+compiler, flasher, relancer la commande thread, voir l'influence sur la place prise 
+sur la pile privée du thread blinker au niveau de la colonne  frestk
 
 
-static const SerialConfig ftdiConfig =  {
-  .speed = 115200,
-  .cr1   = 0,			 // pas de parité
-  .cr2   = USART_CR2_STOP1_BITS, // 1 bit de stop
-  .cr3   = 0			
-};
+Dans le fichier ttyConsole.c, il y a une variable globale, statique
+(elle n'est pas visible en dehors de son unité de compilation), et
+const : elle sera read only en mémoire flash et n'occupera pas
+inutilement de place dans la ram. Cette variable, le tableau commands
+est le point d'entrée des commandes. C'est un tableau de structures
+clefs,valeurs, avec comme clef les mots clefs du shell, et comme
+valeur un pointeur sur une fonction qui sera appelée lorsque ce mot
+clef est tapé.  
+
+En prenant exemple sur les commandes existantes, créer
+une fonction qui permette de changer la fréquence de clignotement de
+la LED, ajouter cette fonction dans le tableau commands, et tester.
+
+
+Conseils : il va falloir que le module ttyConsole.c et le module
+main.c partagent une valeur: la vitesse de clignotement de la LED.
+
+ Le plus simple est d'utiliser une variable globale qui sera déclarée dans
+globalVar.h et définie dans globalVar.c : dans le .h => extern
+volatile int blinkPeriod ; // déclaration dand le .c => volatile int
+blinkPeriod  = 500; // définition Explication du mot clef volatile :
+une variable volatile est une variable sur laquelle aucune
+optimisation de compilation n'est appliquée. Le mot-clé existe en C,
+C++, C# et Java. le préfixe volatile est notamment utilisé quand la
+variable d'une tâche peut être modifiée par une autre tâche ou une
+routine d'interruption (ISR) de manière concurrente.  Dans tous les TP
+qui suivront, les variables partagées entre plusieurs threads, ou
+entre un thread et une routine d'interruption, devront être déclarées
+avec le mot clef volatile
+
+ */
+
+
+static THD_WORKING_AREA(waBlinker, 256);
+static THD_FUNCTION(blinker, arg) 
+{
+
+  (void)arg;
+  chRegSetThreadName("blinker");
+  int prendDeLaPlaceSurLaPile[40] __attribute__((unused)); 
+  
+  while (TRUE) { 
+    palToggleLine (LINE_C00_LED1); 	
+    chThdSleepMilliseconds (500);
+  }
+}
+
 
 
 int main(void) {
@@ -58,26 +91,22 @@ int main(void) {
 
   halInit();
   chSysInit();
+  initHeap();
 
-  // initialisation dynamique
-  palSetLineMode (LINE_B06_UART1_TX, PAL_MODE_ALTERNATE(7));
-  palSetLineMode (LINE_B07_UART1_RX, PAL_MODE_ALTERNATE(7));
-  sdStart(&SD1, &ftdiConfig);
+  consoleInit();
+  chThdCreateStatic(waBlinker, sizeof(waBlinker), NORMALPRIO, blinker, NULL);
 
-  /*
-    la led branchée sur GPIOC_PIN00 change d'état à la reception d'un caractère
-  */
+  consoleLaunch();  
+  
+  // main thread does nothing
   while (TRUE) {
-    palToggleLine (LINE_C00_LED1); 	
-    char input = sdGet (&SD1);
-    sdPut (&SD1, input);
+    chThdSleepSeconds (1);
   }
 }
 
 void  port_halt (void)
 {
-   while (1) {
-   }
+  while (1) ;
 }
 
 void generalKernelErrorCB (void)
