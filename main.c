@@ -1,46 +1,86 @@
+#include <ch.h>
+#include <hal.h>
+#include <ctype.h>
+
 /*
-    ChibiOS - Copyright (C) 2006..2015 Giovanni Di Sirio
+° connecter B6 (uart1_tx) sur ftdi rx AVEC UN JUMPER
+  
+° connecter B7 (uart1_rx) sur ftdi tx AVEC UN JUMPER
+  
+° connecter C0 sur led0
+  
+° ouvrir le projet devbm4_tp02_echo : le programme fourni écoute les caractères qui arrivent    
+  sur la liaison série, et les renvoie à l’émetteur.
+  
+° ouvrir le fichier source main.c, et trouver la vitesse  de la liaison série.
+  dans eclipse, perspective debug ouvrir le terminal, et le connecter en appliquant les 
+  paramètres trouvés dans la question au dessus. 
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+  + (on accède au paramètres en cliquant sur la bouton qui en bas à droite qui représente un terminal)
+  + le port est /dev/bmp_tty sous linux
+  + une fois configuré, le terminal dans eclipse envoie les caractères tapés au clavier sur la 
+    liaison série associée au convertisseur usb-serie, et affiche les caractères 
+    en provenance de ce même convertisseur.
+ 
+° make project
+° debug project
 
-        http://www.apache.org/licenses/LICENSE-2.0
+° modifier le programme pour renvoyer les lettres en majuscules
+  + vous pouvez utiliser la fonction de la librairie standard  toupper
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+° commenter les 2 lignes palSetLineMode qui effectuent l'initialisation dynamique
+  et editer le fichier board.h pour à la place configurer statiquement la liaison série
+  
+° comment faire pour rendre le clignotement de la led indépendant de l’écho de caractères ?
+  
+° rendre le clignotement de la LED indépendant de l’écho de caractères
+
 */
 
-#include "ch.h"
-#include "hal.h"
+
+static const SerialConfig ftdiConfig =  {
+  .speed = 115200,
+  .cr1   = 0,			 // pas de parité
+  .cr2   = USART_CR2_STOP1_BITS, // 1 bit de stop
+  .cr3   = 0			
+};
 
 
-
-/*
- * Application entry point.
- */
 int main(void) {
 
-  /*
+    /*
    * System initializations.
    * - HAL initialization, this also initializes the configured device drivers
    *   and performs the board-specific initializations.
    * - Kernel initialization, the main() function becomes a thread and the
    *   RTOS is active.
    */
+
   halInit();
   chSysInit();
 
+  // initialisation dynamique
+  palSetLineMode (LINE_B06_UART1_TX, PAL_MODE_ALTERNATE(7));
+  palSetLineMode (LINE_B07_UART1_RX, PAL_MODE_ALTERNATE(7));
+  sdStart(&SD1, &ftdiConfig);
 
-  while (true) {
-    palToggleLine (LINE_C00_LED1);
-    if palReadLine (LINE_C01_SWITCH1) {
-	chThdSleepMilliseconds (100);
-      } else {
-	chThdSleepMilliseconds (1000);
-    }
+  /*
+    la led branchée sur GPIOC_PIN00 change d'état à la reception d'un caractère
+  */
+  while (TRUE) {
+    palToggleLine (LINE_C00_LED1); 	
+    char input = sdGet (&SD1);
+    sdPut (&SD1, input);
   }
+}
+
+void  port_halt (void)
+{
+   while (1) {
+   }
+}
+
+void generalKernelErrorCB (void)
+{
+  port_halt ();
 }

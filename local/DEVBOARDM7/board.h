@@ -71,8 +71,8 @@
 #define	PB03                           3U
 #define	PB04                           4U
 #define	PB05                           5U
-#define	PB06                           6U
-#define	PB07                           7U
+#define	PB06_UART1_TX                  6U
+#define	PB07_UART1_RX                  7U
 #define	PB08                           8U
 #define	PB09                           9U
 #define	PB10                           10U
@@ -83,7 +83,7 @@
 #define	PB15                           15U
 
 #define	PC00_LED1                      0U
-#define	PC01_SWITCH1                   1U
+#define	PC01                           1U
 #define	PC02                           2U
 #define	PC03                           3U
 #define	PC04                           4U
@@ -238,8 +238,10 @@
 /*
  * IO lines assignments.
  */
+#define	LINE_B06_UART1_TX              PAL_LINE(GPIOB, 06U)
+#define	LINE_B07_UART1_RX              PAL_LINE(GPIOB, 07U)
+
 #define	LINE_C00_LED1                  PAL_LINE(GPIOC, 00U)
-#define	LINE_C01_SWITCH1               PAL_LINE(GPIOC, 01U)
 
 
 /*
@@ -373,8 +375,8 @@
 					 PIN_MODE_INPUT(PB03) | \
 					 PIN_MODE_INPUT(PB04) | \
 					 PIN_MODE_INPUT(PB05) | \
-					 PIN_MODE_INPUT(PB06) | \
-					 PIN_MODE_INPUT(PB07) | \
+					 PIN_MODE_INPUT(PB06_UART1_TX) | \
+					 PIN_MODE_INPUT(PB07_UART1_RX) | \
 					 PIN_MODE_INPUT(PB08) | \
 					 PIN_MODE_INPUT(PB09) | \
 					 PIN_MODE_INPUT(PB10) | \
@@ -390,8 +392,8 @@
 					 PIN_OTYPE_PUSHPULL(PB03) | \
 					 PIN_OTYPE_PUSHPULL(PB04) | \
 					 PIN_OTYPE_PUSHPULL(PB05) | \
-					 PIN_OTYPE_PUSHPULL(PB06) | \
-					 PIN_OTYPE_PUSHPULL(PB07) | \
+					 PIN_OTYPE_PUSHPULL(PB06_UART1_TX) | \
+					 PIN_OTYPE_PUSHPULL(PB07_UART1_RX) | \
 					 PIN_OTYPE_PUSHPULL(PB08) | \
 					 PIN_OTYPE_PUSHPULL(PB09) | \
 					 PIN_OTYPE_PUSHPULL(PB10) | \
@@ -407,8 +409,8 @@
 					 PIN_OSPEED_HIGH(PB03) | \
 					 PIN_OSPEED_HIGH(PB04) | \
 					 PIN_OSPEED_HIGH(PB05) | \
-					 PIN_OSPEED_HIGH(PB06) | \
-					 PIN_OSPEED_HIGH(PB07) | \
+					 PIN_OSPEED_HIGH(PB06_UART1_TX) | \
+					 PIN_OSPEED_HIGH(PB07_UART1_RX) | \
 					 PIN_OSPEED_HIGH(PB08) | \
 					 PIN_OSPEED_HIGH(PB09) | \
 					 PIN_OSPEED_HIGH(PB10) | \
@@ -424,8 +426,8 @@
 					 PIN_PUPDR_PULLDOWN(PB03) | \
 					 PIN_PUPDR_PULLDOWN(PB04) | \
 					 PIN_PUPDR_PULLDOWN(PB05) | \
-					 PIN_PUPDR_PULLDOWN(PB06) | \
-					 PIN_PUPDR_PULLDOWN(PB07) | \
+					 PIN_PUPDR_PULLUP(PB06_UART1_TX) | \
+					 PIN_PUPDR_PULLUP(PB07_UART1_RX) | \
 					 PIN_PUPDR_PULLDOWN(PB08) | \
 					 PIN_PUPDR_PULLDOWN(PB09) | \
 					 PIN_PUPDR_PULLDOWN(PB10) | \
@@ -441,8 +443,8 @@
 					 PIN_ODR_LOW(PB03) | \
 					 PIN_ODR_LOW(PB04) | \
 					 PIN_ODR_LOW(PB05) | \
-					 PIN_ODR_LOW(PB06) | \
-					 PIN_ODR_LOW(PB07) | \
+					 PIN_ODR_HIGH(PB06_UART1_TX) | \
+					 PIN_ODR_HIGH(PB07_UART1_RX) | \
 					 PIN_ODR_LOW(PB08) | \
 					 PIN_ODR_LOW(PB09) | \
 					 PIN_ODR_LOW(PB10) | \
@@ -458,8 +460,8 @@
 					 PIN_AFIO_AF(PB03, 0) | \
 					 PIN_AFIO_AF(PB04, 0) | \
 					 PIN_AFIO_AF(PB05, 0) | \
-					 PIN_AFIO_AF(PB06, 0) | \
-					 PIN_AFIO_AF(PB07, 0))
+					 PIN_AFIO_AF(PB06_UART1_TX, 0) | \
+					 PIN_AFIO_AF(PB07_UART1_RX, 0))
 
 #define VAL_GPIOB_AFRH			(PIN_AFIO_AF(PB08, 0) | \
 					 PIN_AFIO_AF(PB09, 0) | \
@@ -471,7 +473,7 @@
 					 PIN_AFIO_AF(PB15, 0))
 
 #define VAL_GPIOC_MODER                 (PIN_MODE_OUTPUT(PC00_LED1) | \
-					 PIN_MODE_INPUT(PC01_SWITCH1) | \
+					 PIN_MODE_INPUT(PC01) | \
 					 PIN_MODE_INPUT(PC02) | \
 					 PIN_MODE_INPUT(PC03) | \
 					 PIN_MODE_INPUT(PC04) | \
@@ -488,7 +490,7 @@
 					 PIN_MODE_ALTERNATE(PC15_OSC32_OUT))
 
 #define VAL_GPIOC_OTYPER                (PIN_OTYPE_PUSHPULL(PC00_LED1) | \
-					 PIN_OTYPE_PUSHPULL(PC01_SWITCH1) | \
+					 PIN_OTYPE_PUSHPULL(PC01) | \
 					 PIN_OTYPE_PUSHPULL(PC02) | \
 					 PIN_OTYPE_PUSHPULL(PC03) | \
 					 PIN_OTYPE_PUSHPULL(PC04) | \
@@ -505,7 +507,7 @@
 					 PIN_OTYPE_PUSHPULL(PC15_OSC32_OUT))
 
 #define VAL_GPIOC_OSPEEDR               (PIN_OSPEED_HIGH(PC00_LED1) | \
-					 PIN_OSPEED_HIGH(PC01_SWITCH1) | \
+					 PIN_OSPEED_HIGH(PC01) | \
 					 PIN_OSPEED_HIGH(PC02) | \
 					 PIN_OSPEED_HIGH(PC03) | \
 					 PIN_OSPEED_HIGH(PC04) | \
@@ -522,7 +524,7 @@
 					 PIN_OSPEED_HIGH(PC15_OSC32_OUT))
 
 #define VAL_GPIOC_PUPDR                 (PIN_PUPDR_FLOATING(PC00_LED1) | \
-					 PIN_PUPDR_PULLUP(PC01_SWITCH1) | \
+					 PIN_PUPDR_PULLDOWN(PC01) | \
 					 PIN_PUPDR_PULLDOWN(PC02) | \
 					 PIN_PUPDR_PULLDOWN(PC03) | \
 					 PIN_PUPDR_PULLDOWN(PC04) | \
@@ -539,7 +541,7 @@
 					 PIN_PUPDR_FLOATING(PC15_OSC32_OUT))
 
 #define VAL_GPIOC_ODR                   (PIN_ODR_HIGH(PC00_LED1) | \
-					 PIN_ODR_LOW(PC01_SWITCH1) | \
+					 PIN_ODR_LOW(PC01) | \
 					 PIN_ODR_LOW(PC02) | \
 					 PIN_ODR_LOW(PC03) | \
 					 PIN_ODR_LOW(PC04) | \
@@ -556,7 +558,7 @@
 					 PIN_ODR_HIGH(PC15_OSC32_OUT))
 
 #define VAL_GPIOC_AFRL			(PIN_AFIO_AF(PC00_LED1, 0) | \
-					 PIN_AFIO_AF(PC01_SWITCH1, 0) | \
+					 PIN_AFIO_AF(PC01, 0) | \
 					 PIN_AFIO_AF(PC02, 0) | \
 					 PIN_AFIO_AF(PC03, 0) | \
 					 PIN_AFIO_AF(PC04, 0) | \
