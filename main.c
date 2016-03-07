@@ -1,5 +1,6 @@
 #include <ch.h>
 #include <hal.h>
+#include <stdnoreturn.h>
 #include "globalVar.h"
 #include "stdutil.h"
 #include "ttyConsole.h"
@@ -64,7 +65,7 @@ avec le mot clef volatile
 
 
 static THD_WORKING_AREA(waBlinker, 256);
-static THD_FUNCTION(blinker, arg) 
+static noreturn void blinker (void *arg)
 {
 
   (void)arg;

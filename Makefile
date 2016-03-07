@@ -3,38 +3,45 @@
 # NOTE: Can be overridden externally.
 #
 
+# Compiler options here.
+# -Wdouble-promotion -fno-omit-frame-pointer
+GCC_DIAG =  -Werror -Wno-error=unused-variable -Wno-error=format \
+	    -Wno-error=unused-function \
+	    -Wunused -Wpointer-arith \
+	    -Wstrict-prototypes \
+	    -Werror=sign-compare \
+	    -Wshadow \
+	    -ftrack-macro-expansion=2 -Wno-error=strict-overflow -Wstrict-overflow=5 
+
 ifeq ($(USE_OPT),)
-  USE_OPT = -O0 -ggdb3 -fomit-frame-pointer -falign-functions=16
+  USE_OPT =  -O0  -ggdb3  -Wall -Wextra \
+	    -falign-functions=16 -fomit-frame-pointer \
+	    $(GCC_DIAG) \
+	    -Wl,--build-id=none 
 endif
 
-# Compiler options here.
 ifeq ($(USE_OPT),)
-  USE_OPT = -Ofast -fomit-frame-pointer -falign-functions=16
+  USE_OPT =  -Ofast  -flto  -Wall -Wextra \
+	    -falign-functions=16 -fomit-frame-pointer \
+	     $(GCC_DIAG) \
+	    -Wl,--build-id=none \
+            -u prvGetRegistersFromStack
 endif
+
 
 # C specific options here (added to USE_OPT).
 ifeq ($(USE_COPT),)
-  USE_COPT = -std=gnu11  -Wunsuffixed-float-constants
+  USE_COPT = -std=gnu11  -Wunsuffixed-float-constants 
 endif
 
 # C++ specific options here (added to USE_OPT).
 ifeq ($(USE_CPPOPT),)
-  USE_CPPOPT = -fno-rtti
+  USE_CPPOPT = -std=gnu++1y -fno-rtti -fno-exceptions 
 endif
 
 # Enable this if you want the linker to remove unused code and data
 ifeq ($(USE_LINK_GC),)
   USE_LINK_GC = yes
-endif
-
-# Linker extra options here.
-ifeq ($(USE_LDOPT),)
-  USE_LDOPT = 
-endif
-
-# Enable this if you want link time optimizations (LTO)
-ifeq ($(USE_LTO),)
-  USE_LTO = no
 endif
 
 # If enabled, this option allows to compile the application in THUMB mode.
@@ -45,12 +52,6 @@ endif
 # Enable this if you want to see the full log while compiling.
 ifeq ($(USE_VERBOSE_COMPILE),)
   USE_VERBOSE_COMPILE = no
-endif
-
-# If enabled, this option makes the build process faster by not compiling
-# modules not used in the current configuration.
-ifeq ($(USE_SMART_BUILD),)
-  USE_SMART_BUILD = yes
 endif
 
 #
