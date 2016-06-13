@@ -166,21 +166,19 @@ static void cmd_mem(BaseSequentialStream *lchp, int argc,const char * const argv
 }
 
 
-
 static int32_t get_stack_free (const Thread *tp)
 {
   int32_t index = 0;
-  const uint8_t *maxRamAddr =  (uint8_t*) (0x20000000 + (128*1024));
+  extern const uint8_t __ram0_end__;
   const int32_t internalStructSize = (CH_KERNEL_MAJOR == 2) ? 80 : 120;
   
    unsigned long long *stkAdr =  (unsigned long long *) ((uint8_t *) tp  + internalStructSize); 
-  //unsigned long long *stkAdr =  (unsigned long long *) tp; 
 
-  while ((stkAdr[index] == 0x5555555555555555) && ( ((uint8_t *) &(stkAdr[index])) < maxRamAddr))
-    index++;
-
-  const int32_t freeBytes =  index * (int32_t) sizeof(long long);
-  return MAX(0, freeBytes - internalStructSize);
+   while ((stkAdr[index] == 0x5555555555555555) && ( ((uint8_t *) &(stkAdr[index])) < &__ram0_end__))
+     index++;
+   
+   const int32_t freeBytes =  index * (int32_t) sizeof(long long);
+   return MAX(0, freeBytes - internalStructSize);
 }
 
 
