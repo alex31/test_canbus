@@ -166,20 +166,6 @@ static void cmd_mem(BaseSequentialStream *lchp, int argc,const char * const argv
 }
 
 
-static int32_t get_stack_free (const Thread *tp)
-{
-  int32_t index = 0;
-  extern const uint8_t __ram0_end__;
-  const int32_t internalStructSize = (CH_KERNEL_MAJOR == 2) ? 80 : 120;
-  
-   unsigned long long *stkAdr =  (unsigned long long *) ((uint8_t *) tp  + internalStructSize); 
-
-   while ((stkAdr[index] == 0x5555555555555555) && ( ((uint8_t *) &(stkAdr[index])) < &__ram0_end__))
-     index++;
-   
-   const int32_t freeBytes =  index * (int32_t) sizeof(long long);
-   return MAX(0, freeBytes - internalStructSize);
-}
 
 
 static void cmd_threads(BaseSequentialStream *lchp, int argc,const char * const argv[]) {
@@ -202,15 +188,15 @@ static void cmd_threads(BaseSequentialStream *lchp, int argc,const char * const 
   uint32_t idx=0;
   do {
     chprintf (lchp, "%.8lx %.8lx %6lu %4lu %4lu %9s %9lu   %.1f    \t%s\r\n",
-	      (uint32_t)tp, (uint32_t)tp->p_ctx.r13,
+	      (uint32_t)tp, (uint32_t)tp->ctx.sp,
 	      get_stack_free (tp),
-	      (uint32_t)tp->p_prio, (uint32_t)(tp->p_refs - 1),
-	      states[tp->p_state], (uint32_t)tp->p_time, 
+	      (uint32_t)tp->prio, (uint32_t)(tp->refs - 1),
+	      states[tp->state], (uint32_t)tp->time, 
 	      stampThreadGetCpuPercent (&threadCpuInfo, idx),
 	      chRegGetThreadName(tp));
-    totalTicks+= (float) tp->p_time;
+    totalTicks+= (float) tp->time;
     if (strcmp (chRegGetThreadName(tp), "idle") == 0)
-      idleTicks =  (float) tp->p_time;
+      idleTicks =  (float) tp->time;
     tp = chRegNextThread ((Thread *)tp);
     idx++;
   } while (tp != NULL);
@@ -219,8 +205,6 @@ static void cmd_threads(BaseSequentialStream *lchp, int argc,const char * const 
   const float cpuPercent = 100.f - idlePercent;
   chprintf (lchp, "\r\ncpu load = %.2f\%\r\n", cpuPercent);
 }
-
-
 
 
 
@@ -326,9 +310,9 @@ static void stampThreadCpuInfo (ThreadCpuInfo *ti)
   
   float totalTicks =0;
   do {
-    totalTicks+= (float) tp->p_time;
-    ti->cpu[idx] = (float) tp->p_time - ti->ticks[idx];;
-    ti->ticks[idx] = (float) tp->p_time;
+    totalTicks+= (float) tp->time;
+    ti->cpu[idx] = (float) tp->time - ti->ticks[idx];;
+    ti->ticks[idx] = (float) tp->time;
     tp = chRegNextThread ((Thread *)tp);
     idx++;
   } while ((tp != NULL) && (idx < MAX_CPU_INFO_ENTRIES));
@@ -344,6 +328,7 @@ static void stampThreadCpuInfo (ThreadCpuInfo *ti)
     idx++;
   } while ((tp != NULL) && (idx < MAX_CPU_INFO_ENTRIES));
 }
+
 
 static float stampThreadGetCpuPercent (const ThreadCpuInfo *ti, const uint32_t idx)
 {

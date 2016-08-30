@@ -91,13 +91,13 @@ endif
 PROJECT = ch
 
 # Imported source files and paths
-MY_DIRNAME=../../../ChibiOS_master
+MY_DIRNAME=../../../ChibiOS_next
 ifneq "$(wildcard $(MY_DIRNAME) )" ""
    RELATIVE=../../..
 else
   RELATIVE=../..
 endif
-CHIBIOS = $(RELATIVE)/ChibiOS_master
+CHIBIOS = $(RELATIVE)/ChibiOS_next
 STMSRC = $(RELATIVE)/COMMON/stm
 VARIOUS = $(RELATIVE)/COMMON/various
 USBD_LIB = $(VARIOUS)/Chibios-USB-Devices
@@ -106,7 +106,7 @@ USBD_LIB = $(VARIOUS)/Chibios-USB-Devices
 
 
 # Startup files.
-include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/startup_stm32f7xx.mk
+include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f7xx.mk
 # HAL-OSAL files (optional).
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F7xx/platform.mk
@@ -114,12 +114,14 @@ include local/DEVBOARDM7/board.mk
 include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
-include $(CHIBIOS)/os/rt/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
+include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 # Other files (optional).
-include $(CHIBIOS)/test/rt/test.mk
+
 
 # Define linker script file here
-LDSCRIPT= local/STARTUPLD/STM32F746xG_NoItcm.ld
+#LDSCRIPT= ${STARTUPLD}/STM32F767Zx.ld
+LDSCRIPT= ${STARTUPLD}/STM32F767Zx.ld
+
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -130,7 +132,6 @@ CSRC = $(STARTUPSRC) \
        $(HALSRC) \
        $(PLATFORMSRC) \
        $(BOARDSRC) \
-       $(TESTSRC) \
        $(CHIBIOS)/os/various/syscalls.c \
        $(VARIOUS)/stdutil.c \
        $(VARIOUS)/printf.c \
@@ -166,9 +167,9 @@ TCSRC =
 TCPPSRC =
 
 # List ASM source files here
-ASMSRC = $(STARTUPASM) $(PORTASM) $(OSALASM)
+ASMXSRC = $(STARTUPASM) $(PORTASM) $(OSALASM)
 
-INCDIR = $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
+INCDIR = $(CHIBIOS)/os/license $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
          $(HALINC) $(PLATFORMINC) $(BOARDINC) $(TESTINC) \
          $(CHIBIOS)/os/various $(VARIOUS)
 
@@ -180,7 +181,7 @@ INCDIR = $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
 # Compiler settings
 #
 
-MCU  = cortex-m4
+MCU  = cortex-m7
 
 #TRGT = arm-elf-
 TRGT = arm-none-eabi-
@@ -239,7 +240,7 @@ ULIBS =
 ##############################################################################
 
 
-RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
+RULESPATH = $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk
 
 local/DEVBOARDM7/board.h: local/DEVBOARDM7/board.cfg
