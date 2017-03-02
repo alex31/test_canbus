@@ -119,8 +119,7 @@ include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 
 
 # Define linker script file here
-#LDSCRIPT= ${STARTUPLD}/STM32F767Zx.ld
-LDSCRIPT= ${STARTUPLD}/STM32F767Zx.ld
+LDSCRIPT= ${STARTUPLD}/STM32F76xxI.ld
 
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
@@ -244,7 +243,7 @@ RULESPATH = $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk
 
 local/DEVBOARDM7/board.h: local/DEVBOARDM7/board.cfg
-	quickBoardGpioGen.pl local/DEVBOARDM7/board.cfg local/DEVBOARDM7/board.h
+	boardGen.pl local/DEVBOARDM7/board.cfg local/DEVBOARDM7/board.h
 
 stflash:        all
 	@echo write $(BUILDDIR)/$(PROJECT).bin to flash memory

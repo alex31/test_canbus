@@ -238,10 +238,18 @@
 /*
  * IO lines assignments.
  */
+#define	LINE_A13_SWDIO                 PAL_LINE(GPIOA, 13U)
+#define	LINE_A14_SWCLK                 PAL_LINE(GPIOA, 14U)
+
 #define	LINE_B06_UART1_TX              PAL_LINE(GPIOB, 6U)
 #define	LINE_B07_UART1_RX              PAL_LINE(GPIOB, 7U)
 
 #define	LINE_C00_LED1                  PAL_LINE(GPIOC, 0U)
+#define	LINE_C14_OSC32_IN              PAL_LINE(GPIOC, 14U)
+#define	LINE_C15_OSC32_OUT             PAL_LINE(GPIOC, 15U)
+
+#define	LINE_H00_OSC_IN                PAL_LINE(GPIOH, 0U)
+#define	LINE_H01_OSC_OUT               PAL_LINE(GPIOH, 1U)
 
 
 /*
@@ -257,10 +265,10 @@
 #define PIN_ODR_LEVEL_HIGH(n)       (1U << (n))
 #define PIN_OTYPE_PUSHPULL(n)       (0U << (n))
 #define PIN_OTYPE_OPENDRAIN(n)      (1U << (n))
-#define PIN_OSPEED_SPEED_VERYLOW(n)       (0U << ((n) * 2U))
-#define PIN_OSPEED_SPEED_LOW(n)           (1U << ((n) * 2U))
-#define PIN_OSPEED_SPEED_MEDIUM(n)        (2U << ((n) * 2U))
-#define PIN_OSPEED_SPEED_HIGH(n)          (3U << ((n) * 2U))
+#define PIN_OSPEED_SPEED_VERYLOW(n) (0U << ((n) * 2U))
+#define PIN_OSPEED_SPEED_LOW(n)     (1U << ((n) * 2U))
+#define PIN_OSPEED_SPEED_MEDIUM(n)  (2U << ((n) * 2U))
+#define PIN_OSPEED_SPEED_HIGH(n)    (3U << ((n) * 2U))
 #define PIN_PUPDR_FLOATING(n)       (0U << ((n) * 2U))
 #define PIN_PUPDR_PULLUP(n)         (1U << ((n) * 2U))
 #define PIN_PUPDR_PULLDOWN(n)       (2U << ((n) * 2U))
@@ -426,8 +434,8 @@
 					 PIN_PUPDR_PULLDOWN(PB03) | \
 					 PIN_PUPDR_PULLDOWN(PB04) | \
 					 PIN_PUPDR_PULLDOWN(PB05) | \
-					 PIN_PUPDR_PULLUP(PB06_UART1_TX) | \
-					 PIN_PUPDR_PULLUP(PB07_UART1_RX) | \
+					 PIN_PUPDR_FLOATING(PB06_UART1_TX) | \
+					 PIN_PUPDR_FLOATING(PB07_UART1_RX) | \
 					 PIN_PUPDR_PULLDOWN(PB08) | \
 					 PIN_PUPDR_PULLDOWN(PB09) | \
 					 PIN_PUPDR_PULLDOWN(PB10) | \
@@ -486,8 +494,8 @@
 					 PIN_MODE_INPUT(PC11) | \
 					 PIN_MODE_INPUT(PC12) | \
 					 PIN_MODE_INPUT(PC13) | \
-					 PIN_MODE_ALTERNATE(PC14_OSC32_IN) | \
-					 PIN_MODE_ALTERNATE(PC15_OSC32_OUT))
+					 PIN_MODE_INPUT(PC14_OSC32_IN) | \
+					 PIN_MODE_INPUT(PC15_OSC32_OUT))
 
 #define VAL_GPIOC_OTYPER                (PIN_OTYPE_PUSHPULL(PC00_LED1) | \
 					 PIN_OTYPE_PUSHPULL(PC01) | \
@@ -987,8 +995,8 @@
 					 PIN_AFIO_AF(PG14, 0) | \
 					 PIN_AFIO_AF(PG15, 0))
 
-#define VAL_GPIOH_MODER                 (PIN_MODE_ALTERNATE(PH00_OSC_IN) | \
-					 PIN_MODE_ALTERNATE(PH01_OSC_OUT) | \
+#define VAL_GPIOH_MODER                 (PIN_MODE_INPUT(PH00_OSC_IN) | \
+					 PIN_MODE_INPUT(PH01_OSC_OUT) | \
 					 PIN_MODE_INPUT(PH02) | \
 					 PIN_MODE_INPUT(PH03) | \
 					 PIN_MODE_INPUT(PH04) | \
@@ -1398,6 +1406,16 @@
 					 PIN_AFIO_AF(PK13, 0) | \
 					 PIN_AFIO_AF(PK14, 0) | \
 					 PIN_AFIO_AF(PK15, 0))
+
+#define AF_PA13_SWDIO                    0U
+#define AF_LINE_A13_SWDIO                0U
+#define AF_PA14_SWCLK                    0U
+#define AF_LINE_A14_SWCLK                0U
+#define AF_PB06_UART1_TX                 7U
+#define AF_LINE_B06_UART1_TX             7U
+#define AF_PB07_UART1_RX                 7U
+#define AF_LINE_B07_UART1_RX             7U
+
 
 #if !defined(_FROM_ASM_)
 #ifdef __cplusplus
