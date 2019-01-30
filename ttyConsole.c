@@ -14,6 +14,66 @@
 
 
 /*===========================================================================*/
+/* START OF EDITABLE SECTION                                           */
+/*===========================================================================*/
+
+// declaration des prototypes de fonction
+// ces declarations sont necessaires pour remplir le tableau commands[] ci-dessous
+static void cmd_mem(BaseSequentialStream *lchp, int argc,const char* const argv[]);
+static void cmd_threads(BaseSequentialStream *lchp, int argc,const char* const argv[]);
+static void cmd_rtc(BaseSequentialStream *lchp, int argc,const char* const argv[]);
+static void cmd_uid(BaseSequentialStream *lchp, int argc,const char* const argv[]);
+static void cmd_param(BaseSequentialStream *lchp, int argc,const char* const argv[]);
+
+static const ShellCommand commands[] = {
+  {"mem", cmd_mem},		// affiche la mémoire libre/occupée
+  {"threads", cmd_threads},	// affiche pour chaque thread le taux d'utilisation de la pile et du CPU
+  {"rtc", cmd_rtc},		// affiche l'heure contenue par la RTC
+  {"uid", cmd_uid},		// affiche le numéri d'identification unique du MCU
+  {"param", cmd_param},		// fonction à but pedagogique qui affiche les
+				//   paramètres qui lui sont passés
+  {NULL, NULL}			// marqueur de fin de tableau
+};
+
+
+/*
+  definition de la fonction cmd_param asociée à la commande param (cf. commands[])
+  cette fonction a but pédagogique affiche juste les paramètres fournis, et tente
+  de convertir les paramètres en entier et en flottant, et affiche le resultat de
+  cette conversion. 
+  une fois le programme chargé dans la carte, essayer de rentrer 
+  param toto 10 10.5 0x10
+  dans le terminal d'eclipse pour voir le résultat 
+ */
+static void cmd_param(BaseSequentialStream *lchp, int argc,const char* const argv[])
+{
+  if (argc == 0) {  // si aucun paramètre n'a été passé à la commande param 
+    chprintf (lchp, "pas de paramètre en entrée\r\n");
+  } else { // sinon (un ou plusieurs pararamètres passés à la commande param 
+    for (int argn=0; argn<argc; argn++) { // pour tous les paramètres
+      chprintf (lchp, "le parametre %d/%d est %s\r\n", argn+1, argc, argv[argn]); // afficher
+
+      // tentative pour voir si la chaine peut être convertie en nombre entier et en nombre flottant
+      int entier = atoi (argv[argn]); // atoi converti si c'est possible une chaine en entier
+      float flottant = atof (argv[argn]); // atof converti si c'est possible une chaine en flottant
+
+      chprintf (lchp, "atoi(%s) = %d ;; atof(%s) = %.3f\r\n",
+		argv[argn], entier, argv[argn], flottant);
+    }
+  }
+}
+
+
+/*
+  
+ */
+
+
+/*===========================================================================*/
+/* START OF PRIVATE SECTION  : DO NOT CHANGE ANYTHING BELOW THIS LINE        */
+/*===========================================================================*/
+
+/*===========================================================================*/
 /* Command line related.                                                     */
 /*===========================================================================*/
 
@@ -40,22 +100,12 @@ typedef struct _ThreadCpuInfo {
 static void stampThreadCpuInfo (ThreadCpuInfo *ti);
 static float stampThreadGetCpuPercent (const ThreadCpuInfo *ti, const uint32_t idx);
 
-static void cmd_uid(BaseSequentialStream *lchp, int argc,const char * const argv[]) {
+static void cmd_uid(BaseSequentialStream *lchp, int argc,const char* const argv[]) {
   (void)argv;
   if (argc > 0) {
     chprintf (lchp, "Usage: uid\r\n");
     return;
   }
-
-  /* for (uint32_t i=0; i<2000; i++) { */
-  /*   bkpram[i] = (uint16_t) i; */
-  /* } */
-  
-  /* for (uint32_t i=0; i<2000; i++) { */
-  /*   if (bkpram[i] != (uint16_t) i) { */
-  /*     DebugTrace ("bkpram error"); */
-  /*   } */
-  /* } */
 
   chprintf (lchp, "uniq id : ");
   for (uint32_t i=0; i< UniqProcessorIdLen; i++)
@@ -63,24 +113,7 @@ static void cmd_uid(BaseSequentialStream *lchp, int argc,const char * const argv
   chprintf (lchp, "\r\n");
 }
 
-static void cmd_prt(BaseSequentialStream *lchp, int argc,const char * const argv[]) {
-  (void)lchp;
-  (void)argc;
-  (void)argv;
-
-  char buffer[128];
-  int n1, n2;
-  
-  snprintf (buffer, sizeof(buffer), "time%n = %lu%n", &n1, chVTGetSystemTimeX(), &n2);
-  DebugTrace ("%s => n = %d - %d", buffer, n1, n2);
-
-  DebugTrace ("lerp 10UL, 20UL, 0.5 = %d", lerp (10UL, 20UL, 0.5f));
-  DebugTrace ("lerp -10.0, -20.0, 0.5 = %f", lerp (-10.0d, -20.0d, 0.5d));
-  __auto_type r = lerp (-10.0d, -20.0d, 0.5d);
-  DebugTrace ("sizeof(r) = %d", sizeof(r));
-}
-
-static void cmd_rtc(BaseSequentialStream *lchp, int argc,const char * const argv[])
+static void cmd_rtc(BaseSequentialStream *lchp, int argc,const char* const argv[])
 {
   if ((argc != 0) && (argc != 2) && (argc != 6)) {
      DebugTrace ("Usage: rtc [Hour Minute Second Year monTh Day day_of_Week Adjust] value or");
@@ -90,7 +123,7 @@ static void cmd_rtc(BaseSequentialStream *lchp, int argc,const char * const argv
  
   if (argc == 2) {
     const char timeVar = (char) tolower ((int) *(argv[0]));
-    const int32_t varVal = atoi (argv[1]);
+    const int32_t varVal = strtol (argv[1], NULL, 10);
     
     switch (timeVar) {
     case 'h':
@@ -156,13 +189,13 @@ static void cmd_rtc(BaseSequentialStream *lchp, int argc,const char * const argv
     setSecond ((uint32_t) atoi(argv[2]));
   }
 
-  chprintf (lchp, "RTC : %s %.02u/%.02u/%.04u  %.02u:%.02u:%.02u\r\n",
+  chprintf (lchp, "RTC : %s %.02lu/%.02lu/%.04lu  %.02lu:%.02lu:%.02lu\r\n",
 	    getWeekDayAscii(), getMonthDay(), getMonth(), getYear(),
 	    getHour(), getMinute(), getSecond());
 }
 
 
-static void cmd_mem(BaseSequentialStream *lchp, int argc,const char * const argv[]) {
+static void cmd_mem(BaseSequentialStream *lchp, int argc,const char* const argv[]) {
   (void)argv;
   if (argc > 0) {
     chprintf (lchp, "Usage: mem\r\n");
@@ -175,7 +208,7 @@ static void cmd_mem(BaseSequentialStream *lchp, int argc,const char * const argv
   void * ptr1 = malloc_m (100);
   void * ptr2 = malloc_m (100);
 
-  chprintf (lchp, "(2x) malloc_m(1000) = 0x%x ;; 0x%x\r\n", ptr1, ptr2);
+  chprintf (lchp, "(2x) malloc_m(1000) = %p ;; %p\r\n", ptr1, ptr2);
   chprintf (lchp, "heap free memory : %d bytes\r\n", getHeapFree());
 
   free_m (ptr1);
@@ -185,7 +218,7 @@ static void cmd_mem(BaseSequentialStream *lchp, int argc,const char * const argv
 
 
 
-static void cmd_threads(BaseSequentialStream *lchp, int argc,const char * const argv[]) {
+static void cmd_threads(BaseSequentialStream *lchp, int argc,const char* const argv[]) {
   static const char *states[] = {THD_STATE_NAMES};
   Thread *tp = chRegFirstThread();
   (void)argv;
@@ -220,19 +253,8 @@ static void cmd_threads(BaseSequentialStream *lchp, int argc,const char * const 
 
   const float idlePercent = (idleTicks*100.f)/totalTicks;
   const float cpuPercent = 100.f - idlePercent;
-  chprintf (lchp, "\r\ncpu load = %.2f\%\r\n", cpuPercent);
+  chprintf (lchp, "\r\ncpu load = %.2f%%\r\n", cpuPercent);
 }
-
-
-
-static const ShellCommand commands[] = {
-  {"mem", cmd_mem},
-  {"threads", cmd_threads},
-  {"rtc", cmd_rtc},
-  {"uid", cmd_uid},
-  {"prt", cmd_prt},
-  {NULL, NULL}
-};
 
 
 static const ShellConfig shell_cfg1 = {
