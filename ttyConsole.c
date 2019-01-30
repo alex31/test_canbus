@@ -63,6 +63,23 @@ static void cmd_uid(BaseSequentialStream *lchp, int argc,const char * const argv
   chprintf (lchp, "\r\n");
 }
 
+static void cmd_prt(BaseSequentialStream *lchp, int argc,const char * const argv[]) {
+  (void)lchp;
+  (void)argc;
+  (void)argv;
+
+  char buffer[128];
+  int n1, n2;
+  
+  snprintf (buffer, sizeof(buffer), "time%n = %lu%n", &n1, chVTGetSystemTimeX(), &n2);
+  DebugTrace ("%s => n = %d - %d", buffer, n1, n2);
+
+  DebugTrace ("lerp 10UL, 20UL, 0.5 = %d", lerp (10UL, 20UL, 0.5f));
+  DebugTrace ("lerp -10.0, -20.0, 0.5 = %f", lerp (-10.0d, -20.0d, 0.5d));
+  __auto_type r = lerp (-10.0d, -20.0d, 0.5d);
+  DebugTrace ("sizeof(r) = %d", sizeof(r));
+}
+
 static void cmd_rtc(BaseSequentialStream *lchp, int argc,const char * const argv[])
 {
   if ((argc != 0) && (argc != 2) && (argc != 6)) {
@@ -213,6 +230,7 @@ static const ShellCommand commands[] = {
   {"threads", cmd_threads},
   {"rtc", cmd_rtc},
   {"uid", cmd_uid},
+  {"prt", cmd_prt},
   {NULL, NULL}
 };
 

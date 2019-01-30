@@ -69,7 +69,8 @@
 #define STM32_PLLSAIP_VALUE                 4
 #define STM32_PLLSAIQ_VALUE                 4
 #define STM32_PLLSAIR_VALUE                 4
-#define STM32_PLLSAIDIVR                    STM32_PLLSAIDIVR_OFF
+#define STM32_PLLSAIDIVQ_VALUE              2
+#define STM32_PLLSAIDIVR_VALUE              2
 #define STM32_SAI1SEL                       STM32_SAI1SEL_OFF
 #define STM32_SAI2SEL                       STM32_SAI2SEL_OFF
 #define STM32_USART1SEL                     STM32_USART1SEL_PCLK2
@@ -387,6 +388,7 @@
 #define CH_HEAP_USE_TLSF 0 // if 0 or undef, chAlloc will be used
 #define CONSOLE_DEV_SD SD1
 
-
+#define CHPRINTF_USE_STDLIB		    0
+#define CHPRINTF_BUFFER_SIZE		    160
 
 #endif /* _MCUCONF_H_ */

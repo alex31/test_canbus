@@ -89,15 +89,16 @@ endif
 
 # Define project name here
 PROJECT = ch
+BOARD = DEVBOARDM7
 
 # Imported source files and paths
-MY_DIRNAME=../../../ChibiOS_next
+MY_DIRNAME=../../../ChibiOS_17.6_stable
 ifneq "$(wildcard $(MY_DIRNAME) )" ""
    RELATIVE=../../..
 else
   RELATIVE=../..
 endif
-CHIBIOS = $(RELATIVE)/ChibiOS_next
+CHIBIOS = $(RELATIVE)/ChibiOS_17.6_stable
 STMSRC = $(RELATIVE)/COMMON/stm
 VARIOUS = $(RELATIVE)/COMMON/various
 USBD_LIB = $(VARIOUS)/Chibios-USB-Devices
@@ -110,7 +111,7 @@ include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f7xx.m
 # HAL-OSAL files (optional).
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F7xx/platform.mk
-include local/DEVBOARDM7/board.mk
+include local/$(BOARD)/board.mk
 include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
@@ -241,9 +242,11 @@ ULIBS =
 
 RULESPATH = $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk
+$(OBJS): local/$(BOARD)/board.h
 
-local/DEVBOARDM7/board.h: local/DEVBOARDM7/board.cfg
-	boardGen.pl local/DEVBOARDM7/board.cfg local/DEVBOARDM7/board.h
+local/$(BOARD)/board.h: local/$(BOARD)/board.cfg
+	boardGen.pl     $<  $@
+
 
 stflash:        all
 	@echo write $(BUILDDIR)/$(PROJECT).bin to flash memory
