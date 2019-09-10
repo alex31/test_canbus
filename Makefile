@@ -94,7 +94,7 @@ endif
 
 # Define project name here
 PROJECT = ch
-BOARD = DEVBOARDM7
+BOARD = CHIMERA_1_00
 
 # Imported source files and paths
 MY_DIRNAME=../../../ChibiOS_stable
@@ -250,7 +250,7 @@ include $(RULESPATH)/rules.mk
 $(OBJS): local/$(BOARD)/board.h
 
 local/$(BOARD)/board.h: local/$(BOARD)/board.cfg
-	boardGen.pl     $<  $@
+	boardGen.pl  --no-pp-line   $<  $@
 
 
 stflash:        all

@@ -29,7 +29,7 @@ static void blinker (void *arg)			// fonction d'entrée du thread blinker
   int prendDeLaPlaceSurLaPile[40] __attribute__((unused)); // variable automatique, donc sur la pile
   
   while (true) {				// boucle infinie
-    palToggleLine(LINE_C00_LED1);		// clignotement de la led 
+    palToggleLine(LINE_LED3);		// clignotement de la led 
     chThdSleepMilliseconds(1000);		// à la féquence de 1 hertz
   }
 }
