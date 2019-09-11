@@ -27,7 +27,11 @@ pour 500Kbaud
   * 54e6 / (6*9) = 1MBaud
 */
 
+/*0b100 - Data with EID or (0b110 - RemoteFrame with EID)*/
+#define SET_CAN_EID_DATA(x) (((x) << 3)|0b100)
 
+/*0b110 - Mask enable for EID/SID and DATA/RTR*/
+#define SET_CAN_EID_MASK(x) (((x) << 3)|0b110)
 
 #define BTR_CAN_500KBAUD (CAN_BTR_SJW(0) | CAN_BTR_BRP(8) | \
 			   CAN_BTR_TS1(8) | CAN_BTR_TS2(1))
@@ -161,6 +165,33 @@ int main (void)
   halInit();
   chSysInit();
   initHeap();		// initialisation du "tas" pour permettre l'allocation mémoire dynamique 
+
+
+
+  CANFilter can_filter_12[2] = {				
+				/* Assign filter #1 32bit mask eid=0x01234567 to FIFO 0 */
+				{
+				 .filter = 1,
+				 .mode = 0, //mask mode
+				 .scale = 1, //32 bits mode
+				 .assignment = 0, // must be keept to 0 in this version of driver
+				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_RECEIVER),
+				 .register2 = SET_CAN_EID_MASK(0x1FFFFFFF)
+				},								
+				
+				/* Assign filter #2 32bit mask eid=0x01234568 to FIFO 1 */
+				{
+				 .filter = 2,
+				 .mode = 0, //mask mode
+				 .scale = 1, //32 bits mode
+				 .assignment = 0, // must be keept to 0 in this version of driver
+				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_TRANSMITTER),
+				 .register2 = SET_CAN_EID_MASK(0x1FFFFFFF)
+				}
+  };
+  // share filters between CAN1 and CAN2
+  canSTM32SetFilters(&CAND1, STM32_CAN_MAX_FILTERS/2, ARRAY_LEN(can_filter_12), can_filter_12);
+
 
   canStart(&CAND1, &cancfg);
 
