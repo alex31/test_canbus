@@ -40,7 +40,7 @@
 #define STM32_PVD_ENABLE                    FALSE
 #define STM32_PLS                           STM32_PLS_LEV0
 #define STM32_BKPRAM_ENABLE                 FALSE
-#define STM32_HSI_ENABLED                   TRUE
+#define STM32_HSI_ENABLED                   FALSE
 #define STM32_LSI_ENABLED                   FALSE
 #define STM32_HSE_ENABLED                   TRUE
 #define STM32_LSE_ENABLED                   TRUE
@@ -56,7 +56,7 @@
 #define STM32_PPRE2                         STM32_PPRE2_DIV2
 #define STM32_RTCSEL                        STM32_RTCSEL_LSE
 #define STM32_RTCPRE_VALUE                  25
-#define STM32_MCO1SEL                       STM32_MCO1SEL_HSI
+#define STM32_MCO1SEL                       STM32_MCO1SEL_HSE
 #define STM32_MCO1PRE                       STM32_MCO1PRE_DIV1
 #define STM32_MCO2SEL                       STM32_MCO2SEL_SYSCLK
 #define STM32_MCO2PRE                       STM32_MCO2PRE_DIV4
@@ -112,7 +112,7 @@
 /*
  * CAN driver system settings.
  */
-#define STM32_CAN_USE_CAN1                  FALSE
+#define STM32_CAN_USE_CAN1                  TRUE
 #define STM32_CAN_USE_CAN2                  FALSE
 #define STM32_CAN_CAN1_IRQ_PRIORITY         11
 #define STM32_CAN_CAN2_IRQ_PRIORITY         11
@@ -260,7 +260,7 @@
 #define STM32_SDC_SDMMC_CLOCK_DELAY         10
 #define STM32_SDC_SDMMC1_DMA_STREAM         STM32_DMA_STREAM_ID(2, 6)
 #define STM32_SDC_SDMMC1_DMA_PRIORITY       3
-#define STM32_SDC_SDMMC1_IRQ_PRIORITY       9
+#define STM32_SDC_SDMMC1_IRQ_PRIORITY	    9
 
 /*
  * SERIAL driver system settings.

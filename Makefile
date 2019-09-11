@@ -260,5 +260,6 @@ stflash:        all
 
 flash: all
 	@echo write $(BUILDDIR)/$(PROJECT).bin to flash memory
-	bmpflash  $(BUILDDIR)/$(PROJECT).elf
+	bmpflash  -device=/dev/ttyACM0 $(BUILDDIR)/$(PROJECT).elf
+	bmpflash  -device=/dev/ttyACM2 $(BUILDDIR)/$(PROJECT).elf
 	@echo Done
