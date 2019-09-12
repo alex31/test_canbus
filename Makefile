@@ -253,13 +253,13 @@ local/$(BOARD)/board.h: local/$(BOARD)/board.cfg
 	boardGen.pl  --no-pp-line   $<  $@
 
 
-stflash:        all
+stflash: all
 	@echo write $(BUILDDIR)/$(PROJECT).bin to flash memory
 	/usr/local/bin/st-flash write  $(BUILDDIR)/$(PROJECT).bin 0x08000000
 	@echo Done
 
 flash: all
 	@echo write $(BUILDDIR)/$(PROJECT).bin to flash memory
-	bmpflash  -device=/dev/ttyACM0 $(BUILDDIR)/$(PROJECT).elf
+	bmpflash  -device=/dev/ttyACM0 $(BUILDDIR)/$(PROJECT).elf 
 	bmpflash  -device=/dev/ttyACM2 $(BUILDDIR)/$(PROJECT).elf
 	@echo Done

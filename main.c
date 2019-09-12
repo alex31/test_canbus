@@ -33,13 +33,23 @@ pour 500Kbaud
 /*0b110 - Mask enable for EID/SID and DATA/RTR*/
 #define SET_CAN_EID_MASK(x) (((x) << 3)|0b110)
 
+#define CAN_FILTER_MODE_MASK 0U
+#define CAN_FILTER_MODE_ID 1U
+#define CAN_FILTER_SCALE_16_BITS 0U
+#define CAN_FILTER_SCALE_32_BITS 1U
+
 #define BTR_CAN_500KBAUD (CAN_BTR_SJW(0) | CAN_BTR_BRP(8) | \
 			   CAN_BTR_TS1(8) | CAN_BTR_TS2(1))
 
 #define BTR_CAN_1MBAUD   (CAN_BTR_SJW(0) | CAN_BTR_BRP(5) | \
 			  CAN_BTR_TS1(5) | CAN_BTR_TS2(1))
 
-#define BTR_CAN BTR_CAN_1MBAUD 
+#define BTR_CAN BTR_CAN_1MBAUD
+
+#define CAN_FILTER_ID 0
+#define CAN_FILTER_MASK 1
+
+#define CAN_FILTER_TYPE CAN_FILTER_ID
 
 /*
   Câbler une LED sur la broche C0
@@ -167,30 +177,45 @@ int main (void)
   initHeap();		// initialisation du "tas" pour permettre l'allocation mémoire dynamique 
 
 
-
-  CANFilter can_filter_12[2] = {				
-				/* Assign filter #1 32bit mask eid=0x01234567 to FIFO 0 */
+#if (CAN_FILTER_TYPE == CAN_FILTER_MASK)
+  CANFilter can_filter[] = {				
 				{
-				 .filter = 1,
-				 .mode = 0, //mask mode
-				 .scale = 1, //32 bits mode
+				 .filter = 0,
+				 .mode = CAN_FILTER_MODE_MASK,
+				 .scale = CAN_FILTER_SCALE_32_BITS,
 				 .assignment = 0, // must be keept to 0 in this version of driver
 				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_RECEIVER),
 				 .register2 = SET_CAN_EID_MASK(0x1FFFFFFF)
 				},								
 				
-				/* Assign filter #2 32bit mask eid=0x01234568 to FIFO 1 */
+				
 				{
-				 .filter = 2,
-				 .mode = 0, //mask mode
-				 .scale = 1, //32 bits mode
+				 .filter = 1,
+				 .mode = CAN_FILTER_MODE_MASK,
+				 .scale = CAN_FILTER_SCALE_32_BITS,
 				 .assignment = 0, // must be keept to 0 in this version of driver
 				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_TRANSMITTER),
 				 .register2 = SET_CAN_EID_MASK(0x1FFFFFFF)
 				}
   };
+#elif (CAN_FILTER_TYPE == CAN_FILTER_ID)
+ CANFilter can_filter[] = {				
+				{
+				 .filter = 0,
+				 .mode = CAN_FILTER_MODE_ID,
+				 .scale = CAN_FILTER_SCALE_32_BITS,
+				 .assignment = 0, // must be keept to 0 in this version of driver
+				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_RECEIVER),
+				 .register2 = SET_CAN_EID_DATA(0x01234566+ROLE_TRANSMITTER),
+				}
+ };
+				
+#else
+#error "unknown CAN_FILTER_TYPE"
+#endif
+				
   // share filters between CAN1 and CAN2
-  canSTM32SetFilters(&CAND1, STM32_CAN_MAX_FILTERS/2, ARRAY_LEN(can_filter_12), can_filter_12);
+  canSTM32SetFilters(&CAND1, STM32_CAN_MAX_FILTERS/2, ARRAY_LEN(can_filter), can_filter);
 
 
   canStart(&CAND1, &cancfg);
