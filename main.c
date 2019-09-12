@@ -72,8 +72,8 @@ pour 500Kbaud
  */
 
 static const CANConfig cancfg = {
-  .mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP,
-  .btr = BTR_CAN
+				 .mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP | CAN_MCR_TTCM,
+				 .btr = BTR_CAN
 };
 
 static volatile uint32_t lastFrameIdx = 0;
@@ -126,7 +126,7 @@ noreturn static void canTx (void *arg)
       //DebugTrace("cantx OK");
       count++;
     }
-    chThdSleepMicroseconds(200);
+    chThdSleepMilliseconds(10);
   }
 }
 
@@ -163,15 +163,19 @@ noreturn static void canRx (void *arg)
     const msg_t status = canReceive(&CAND1, CAN_ANY_MAILBOX,  &rxmsg, TIME_INFINITE);
     if (status == MSG_OK) {
       /* Process message.*/
-      /* DebugTrace("reception trame from role %s count=%ld", */
-      /* 		 rxmsg.data32[0] == ROLE_RECEIVER ? "sdIn" : "sdLess", */
-      /* 		 rxmsg.data32[1]); */
+      DebugTrace("reception trame from role %s count=%ld Time=%d FMI=%d",
+      		 rxmsg.data32[0] == ROLE_RECEIVER ? "sdIn" : "sdLess",
+      		 rxmsg.data32[1],
+		 rxmsg.TIME,
+		 rxmsg.FMI
+		 );
+
       if ((rxmsg.data32[1] - lastFrameIdx) != 1) {
-	DebugTrace("Frame lost");
+	DebugTrace("*******Frame lost**********");
       }
       lastFrameIdx = rxmsg.data32[1] ;
     } else {
-      // normal error when time immediate
+      // normal error when time immediate, timout error if not time_infinite
       DebugTrace("canrx error for role %ld %ld", role, status);
     }
   }
