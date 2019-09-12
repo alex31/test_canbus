@@ -43,18 +43,26 @@ pour 500Kbaud
 #define CAN_REC(canp) (((canp)->can->ESR & CAN_ESR_REC_Msk) >> CAN_ESR_REC_Pos)
 #define CAN_TEC(canp) (((canp)->can->ESR & CAN_ESR_TEC_Msk) >> CAN_ESR_TEC_Pos)
 
+
+
 #define BTR_CAN_500KBAUD (CAN_BTR_SJW(0) | CAN_BTR_BRP(8) | \
 			   CAN_BTR_TS1(8) | CAN_BTR_TS2(1))
 
 #define BTR_CAN_1MBAUD   (CAN_BTR_SJW(0) | CAN_BTR_BRP(5) | \
 			  CAN_BTR_TS1(5) | CAN_BTR_TS2(1))
 
-#define BTR_CAN BTR_CAN_1MBAUD
+
 
 #define CAN_FILTER_ID 0
 #define CAN_FILTER_MASK 1
 
+
+
+// DEMO CONFIGURATION CHOICE
 #define CAN_FILTER_TYPE CAN_FILTER_ID
+#define BTR_CAN BTR_CAN_1MBAUD
+#define CAN_ACTIVATE_TIME_CONTROL 0
+
 
 /*
   Câbler une LED sur la broche C0
@@ -72,7 +80,11 @@ pour 500Kbaud
  */
 
 static const CANConfig cancfg = {
-				 .mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP | CAN_MCR_TTCM,
+				 .mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP
+#if CAN_ACTIVATE_TIME_CONTROL 
+				 | CAN_MCR_TTCM
+#endif
+				 ,
 				 .btr = BTR_CAN
 };
 
@@ -126,7 +138,7 @@ noreturn static void canTx (void *arg)
       //DebugTrace("cantx OK");
       count++;
     }
-    chThdSleepMilliseconds(10);
+    chThdSleepMilliseconds(100);
   }
 }
 
@@ -163,13 +175,20 @@ noreturn static void canRx (void *arg)
     const msg_t status = canReceive(&CAND1, CAN_ANY_MAILBOX,  &rxmsg, TIME_INFINITE);
     if (status == MSG_OK) {
       /* Process message.*/
+#if  CAN_ACTIVATE_TIME_CONTROL
       DebugTrace("reception trame from role %s count=%ld Time=%d FMI=%d",
       		 rxmsg.data32[0] == ROLE_RECEIVER ? "sdIn" : "sdLess",
       		 rxmsg.data32[1],
 		 rxmsg.TIME,
 		 rxmsg.FMI
 		 );
-
+#else
+       DebugTrace("reception trame from role %s count=%ld FMI=%d",
+      		 rxmsg.data32[0] == ROLE_RECEIVER ? "sdIn" : "sdLess",
+      		 rxmsg.data32[1],
+		 rxmsg.FMI
+		 );
+#endif
       if ((rxmsg.data32[1] - lastFrameIdx) != 1) {
 	DebugTrace("*******Frame lost**********");
       }
