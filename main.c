@@ -40,6 +40,9 @@ pour 500Kbaud
 #define CAN_FILTER_FIFO_ASSIGN_0 0U
 #define CAN_FILTER_FIFO_ASSIGN_1 1U
 
+#define CAN_REC(canp) (((canp)->can->ESR & CAN_ESR_REC_Msk) >> CAN_ESR_REC_Pos)
+#define CAN_TEC(canp) (((canp)->can->ESR & CAN_ESR_TEC_Msk) >> CAN_ESR_TEC_Pos)
+
 #define BTR_CAN_500KBAUD (CAN_BTR_SJW(0) | CAN_BTR_BRP(8) | \
 			   CAN_BTR_TS1(8) | CAN_BTR_TS2(1))
 
@@ -87,7 +90,11 @@ noreturn static void blinker (void *arg)			// fonction d'entrée du thread blink
   while (true) {				
     palToggleLine(LINE_LED1);		
     chThdSleepMilliseconds(100*(2*role));
-    DebugTrace("last rec frame idx = %ld", lastFrameIdx);
+    DebugTrace("last rec frame idx = %ld tec=%ld rec=%ld",
+	       lastFrameIdx,
+	       CAN_TEC(&CAND1),
+	       CAN_REC(&CAND1)
+	       );
   }
 }
 
