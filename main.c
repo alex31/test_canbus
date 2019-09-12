@@ -59,9 +59,9 @@ pour 500Kbaud
 
 
 // DEMO CONFIGURATION CHOICE
-#define CAN_FILTER_TYPE CAN_FILTER_ID
-#define BTR_CAN BTR_CAN_1MBAUD
-#define CAN_ACTIVATE_TIME_CONTROL 0
+#define CAN_FILTER_TYPE			CAN_FILTER_ID
+#define BTR_CAN				BTR_CAN_1MBAUD
+#define CAN_ACTIVATE_TIME_CONTROL	0
 
 
 /*
@@ -216,7 +216,7 @@ int main (void)
 				 .mode = CAN_FILTER_MODE_MASK,
 				 .scale = CAN_FILTER_SCALE_32_BITS,
 				 .assignment = CAN_FILTER_FIFO_ASSIGN_0,
-				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_RECEIVER),
+				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_RECEIVER), //FMI0
 				 .register2 = SET_CAN_EID_MASK(0x1FFFFFFF)
 				},								
 				
@@ -226,7 +226,7 @@ int main (void)
 				 .mode = CAN_FILTER_MODE_MASK,
 				 .scale = CAN_FILTER_SCALE_32_BITS,
 				 .assignment = CAN_FILTER_FIFO_ASSIGN_0,
-				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_TRANSMITTER),
+				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_TRANSMITTER),//FMI1
 				 .register2 = SET_CAN_EID_MASK(0x1FFFFFFF)
 				}
   };
@@ -237,8 +237,8 @@ int main (void)
 				 .mode = CAN_FILTER_MODE_ID,
 				 .scale = CAN_FILTER_SCALE_32_BITS,
 				 .assignment = CAN_FILTER_FIFO_ASSIGN_0, 
-				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_RECEIVER),
-				 .register2 = SET_CAN_EID_DATA(0x01234566+ROLE_TRANSMITTER),
+				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_RECEIVER), //FMI0
+				 .register2 = SET_CAN_EID_DATA(0x01234566+ROLE_TRANSMITTER), //FMI1
 				}
  };
 				
