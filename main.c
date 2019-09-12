@@ -37,6 +37,8 @@ pour 500Kbaud
 #define CAN_FILTER_MODE_ID 1U
 #define CAN_FILTER_SCALE_16_BITS 0U
 #define CAN_FILTER_SCALE_32_BITS 1U
+#define CAN_FILTER_FIFO_ASSIGN_0 0U
+#define CAN_FILTER_FIFO_ASSIGN_1 1U
 
 #define BTR_CAN_500KBAUD (CAN_BTR_SJW(0) | CAN_BTR_BRP(8) | \
 			   CAN_BTR_TS1(8) | CAN_BTR_TS2(1))
@@ -183,7 +185,7 @@ int main (void)
 				 .filter = 0,
 				 .mode = CAN_FILTER_MODE_MASK,
 				 .scale = CAN_FILTER_SCALE_32_BITS,
-				 .assignment = 0, // must be keept to 0 in this version of driver
+				 .assignment = CAN_FILTER_FIFO_ASSIGN_0,
 				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_RECEIVER),
 				 .register2 = SET_CAN_EID_MASK(0x1FFFFFFF)
 				},								
@@ -193,7 +195,7 @@ int main (void)
 				 .filter = 1,
 				 .mode = CAN_FILTER_MODE_MASK,
 				 .scale = CAN_FILTER_SCALE_32_BITS,
-				 .assignment = 0, // must be keept to 0 in this version of driver
+				 .assignment = CAN_FILTER_FIFO_ASSIGN_0,
 				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_TRANSMITTER),
 				 .register2 = SET_CAN_EID_MASK(0x1FFFFFFF)
 				}
@@ -204,7 +206,7 @@ int main (void)
 				 .filter = 0,
 				 .mode = CAN_FILTER_MODE_ID,
 				 .scale = CAN_FILTER_SCALE_32_BITS,
-				 .assignment = 0, // must be keept to 0 in this version of driver
+				 .assignment = CAN_FILTER_FIFO_ASSIGN_0, 
 				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_RECEIVER),
 				 .register2 = SET_CAN_EID_DATA(0x01234566+ROLE_TRANSMITTER),
 				}
