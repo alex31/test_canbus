@@ -11,8 +11,21 @@
 #include "stdnoreturn.h"
 
 
-#define ROLE_RECEIVER 0x2
-#define ROLE_TRANSMITTER 0x4
+#define ROLE_SATURATE 0x2
+#define ROLE_ABORT_THEN_SEND_HIGHPRIO 0x4
+
+#define CAN_SATURATE_EID	1000U
+
+/*
+  ° Pas de filtrage pour simplifier
+  ° un thread sature le bus en envoyant en boucle un msg id 1000 decimal 
+  ° l'autre thread permet par le shell 
+	* d'envoyer des messages (id et data en param)
+	* d'annuler un messaghe (mailbox en param)
+
+  ° en reception on affiche un msg que si l'eid est != de 1000
+  ° l'idée est de tester l'API abort du driver can
+ */
 
 /*
 * horloge source PCLK1 : 54Mhz
@@ -51,18 +64,14 @@ pour 500Kbaud
 #define BTR_CAN_1MBAUD   (CAN_BTR_SJW(0) | CAN_BTR_BRP(5) | \
 			  CAN_BTR_TS1(5) | CAN_BTR_TS2(1))
 
+#define CAN_TX_FIFO_MODE  CAN_MCR_TXFP
+#define CAN_TX_PRIORITY_MODE  0U
 
 
-#define CAN_FILTER_ID 0
-#define CAN_FILTER_MASK 1
-
-
-
-// DEMO CONFIGURATION CHOICE
 #define CAN_FILTER_TYPE			CAN_FILTER_ID
 #define BTR_CAN				BTR_CAN_1MBAUD
-#define CAN_ACTIVATE_TIME_CONTROL	0
-
+#define CAN_TX_SCHEDULE			CAN_TX_FIFO_MODE
+//#define CAN_TX_SCHEDULE		CAN_TX_PRIORITY_MODE
 
 /*
   Câbler une LED sur la broche C0
@@ -80,11 +89,7 @@ pour 500Kbaud
  */
 
 static const CANConfig cancfg = {
-				 .mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP
-#if CAN_ACTIVATE_TIME_CONTROL 
-				 | CAN_MCR_TTCM
-#endif
-				 ,
+				 .mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_TX_SCHEDULE,
 				 .btr = BTR_CAN
 };
 
@@ -96,17 +101,20 @@ noreturn static void blinker (void *arg)			// fonction d'entrée du thread blink
 {
   (void)arg;					// on dit au compilateur que "arg" n'est pas utilisé
 
-  chRegSetThreadName("blinker");		// on nomme le thread
-  const uint32_t role = (palReadLine(LINE_SD_DETECT) == PAL_LOW) ? ROLE_RECEIVER : ROLE_TRANSMITTER;
-  
+  const uint32_t role = (palReadLine(LINE_SD_DETECT) == PAL_LOW) ?
+    ROLE_SATURATE :
+    ROLE_ABORT_THEN_SEND_HIGHPRIO;
+
+  chRegSetThreadName(role == ROLE_SATURATE ? "blink saturate" : "blink try abort");
+
   while (true) {				
     palToggleLine(LINE_LED1);		
     chThdSleepMilliseconds(100*(2*role));
-    DebugTrace("last rec frame idx = %ld tec=%ld rec=%ld",
-	       lastFrameIdx,
-	       CAN_TEC(&CAND1),
-	       CAN_REC(&CAND1)
-	       );
+    /* DebugTrace("last rec frame idx = %ld tec=%ld rec=%ld", */
+    /* 	       lastFrameIdx, */
+    /* 	       CAN_TEC(&CAND1), */
+    /* 	       CAN_REC(&CAND1) */
+    /* 	       ); */
   }
 }
 
@@ -116,29 +124,30 @@ noreturn static void canTx (void *arg)
   (void)arg;				
   
   chRegSetThreadName("canTx");
-  const uint32_t role = (palReadLine(LINE_SD_DETECT) == PAL_LOW) ? ROLE_RECEIVER : ROLE_TRANSMITTER;
+  const uint32_t role = (palReadLine(LINE_SD_DETECT) == PAL_LOW) ?
+    ROLE_SATURATE :
+    ROLE_ABORT_THEN_SEND_HIGHPRIO;
   uint32_t count = 0;
 
-  /* if (role == ROLE_RECEIVER) */
-  /*   chThdSleep(TIME_INFINITE); */
+   if (role == ROLE_ABORT_THEN_SEND_HIGHPRIO) 
+    chThdSleep(TIME_INFINITE);
   
   while (true) {			
     const CANTxFrame txmsg = {
 			      .IDE = CAN_IDE_EXT,
-			      .EID = 0x01234566+role,
+			      .EID = CAN_SATURATE_EID,
 			      .RTR = CAN_RTR_DATA,
-			      .DLC = 8,
-			      .data32[0] = role,
-			      .data32[1] = count};
+			      .DLC = 4,
+			      .data32[0] = count,
+			      .data32[1] = 0};
     
-    msg_t status = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, TIME_MS2I(500));
+    msg_t status = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, TIME_INFINITE);
     if (status != MSG_OK) {
       DebugTrace("cantx error %ld", status);
     } else {
       //DebugTrace("cantx OK");
       count++;
     }
-    chThdSleepMilliseconds(100);
   }
 }
 
@@ -146,53 +155,25 @@ static THD_WORKING_AREA(waCanRx, 304);
 noreturn static void canRx (void *arg)			
 {
   (void)arg;					
-  event_listener_t el;
   CANRxFrame rxmsg;
 
   chRegSetThreadName("canRx");		
-  chEvtRegister(&CAND1.rxfull_event, &el, 0);
-  const uint32_t role = (palReadLine(LINE_SD_DETECT) == PAL_LOW) ? ROLE_RECEIVER : ROLE_TRANSMITTER;
-  
-  /* while (true) { */
-  /*   msg_t status; */
-  /*       if (chEvtWaitAnyTimeout(ALL_EVENTS, TIME_MS2I(100)) == 0) */
-  /*     continue; */
-  /* 	do { */
-  /* 	  status = canReceive(&CAND1, CAN_ANY_MAILBOX,  &rxmsg, TIME_IMMEDIATE); */
-  /* 	  if (status == MSG_OK) { */
-  /* 	    /\* Process message.*\/ */
-  /* 	    DebugTrace("reception trame from role %s count=%ld", */
-  /* 		       rxmsg.data32[0] == ROLE_RECEIVER ? "sdIn" : "sdLess", */
-  /* 		       rxmsg.data32[1]); */
-  /* 	  } else { */
-  /* 	    // normal error when time immediate */
-  /* 	    //DebugTrace("canrx error for role %ld %ld", role, status); */
-  /* 	  } */
-  /* 	} while (status == MSG_OK); */
-  /* } */
 
+  const uint32_t role = (palReadLine(LINE_SD_DETECT) == PAL_LOW) ?
+    ROLE_SATURATE :
+    ROLE_ABORT_THEN_SEND_HIGHPRIO;
+
+ 
   while (true) {
     const msg_t status = canReceive(&CAND1, CAN_ANY_MAILBOX,  &rxmsg, TIME_INFINITE);
     if (status == MSG_OK) {
       /* Process message.*/
-#if  CAN_ACTIVATE_TIME_CONTROL
-      DebugTrace("reception trame from role %s count=%ld Time=%d FMI=%d",
-      		 rxmsg.data32[0] == ROLE_RECEIVER ? "sdIn" : "sdLess",
-      		 rxmsg.data32[1],
-		 rxmsg.TIME,
-		 rxmsg.FMI
-		 );
-#else
-       DebugTrace("reception trame from role %s count=%ld FMI=%d",
-      		 rxmsg.data32[0] == ROLE_RECEIVER ? "sdIn" : "sdLess",
-      		 rxmsg.data32[1],
-		 rxmsg.FMI
-		 );
-#endif
-      if ((rxmsg.data32[1] - lastFrameIdx) != 1) {
-	DebugTrace("*******Frame lost**********");
+      if (rxmsg.EID != CAN_SATURATE_EID) {
+	DebugTrace("reception trame from eid %d d[0]=%ld",
+		   rxmsg.EID,
+		   rxmsg.data32[0]
+		   );
       }
-      lastFrameIdx = rxmsg.data32[1] ;
     } else {
       // normal error when time immediate, timout error if not time_infinite
       DebugTrace("canrx error for role %ld %ld", role, status);
@@ -200,55 +181,12 @@ noreturn static void canRx (void *arg)
   }
 }
 
-
 int main (void)
 {
 
   halInit();
   chSysInit();
   initHeap();		// initialisation du "tas" pour permettre l'allocation mémoire dynamique 
-
-
-#if (CAN_FILTER_TYPE == CAN_FILTER_MASK)
-  CANFilter can_filter[] = {				
-				{
-				 .filter = 0,
-				 .mode = CAN_FILTER_MODE_MASK,
-				 .scale = CAN_FILTER_SCALE_32_BITS,
-				 .assignment = CAN_FILTER_FIFO_ASSIGN_0,
-				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_RECEIVER), //FMI0
-				 .register2 = SET_CAN_EID_MASK(0x1FFFFFFF)
-				},								
-				
-				
-				{
-				 .filter = 1,
-				 .mode = CAN_FILTER_MODE_MASK,
-				 .scale = CAN_FILTER_SCALE_32_BITS,
-				 .assignment = CAN_FILTER_FIFO_ASSIGN_0,
-				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_TRANSMITTER),//FMI1
-				 .register2 = SET_CAN_EID_MASK(0x1FFFFFFF)
-				}
-  };
-#elif (CAN_FILTER_TYPE == CAN_FILTER_ID)
- CANFilter can_filter[] = {				
-				{
-				 .filter = 0,
-				 .mode = CAN_FILTER_MODE_ID,
-				 .scale = CAN_FILTER_SCALE_32_BITS,
-				 .assignment = CAN_FILTER_FIFO_ASSIGN_0, 
-				 .register1 = SET_CAN_EID_DATA(0x01234566+ROLE_RECEIVER), //FMI0
-				 .register2 = SET_CAN_EID_DATA(0x01234566+ROLE_TRANSMITTER), //FMI1
-				}
- };
-				
-#else
-#error "unknown CAN_FILTER_TYPE"
-#endif
-				
-  // share filters between CAN1 and CAN2
-  canSTM32SetFilters(&CAND1, STM32_CAN_MAX_FILTERS/2, ARRAY_LEN(can_filter), can_filter);
-
 
   canStart(&CAND1, &cancfg);
 

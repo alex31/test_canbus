@@ -24,6 +24,8 @@ static void cmd_threads(BaseSequentialStream *lchp, int argc,const char* const a
 static void cmd_rtc(BaseSequentialStream *lchp, int argc,const char* const argv[]);
 static void cmd_uid(BaseSequentialStream *lchp, int argc,const char* const argv[]);
 static void cmd_param(BaseSequentialStream *lchp, int argc,const char* const argv[]);
+static void cmd_send(BaseSequentialStream *lchp, int argc,const char* const argv[]);
+static void cmd_abrt(BaseSequentialStream *lchp, int argc,const char* const argv[]);
 
 static const ShellCommand commands[] = {
   {"mem", cmd_mem},		// affiche la mémoire libre/occupée
@@ -32,6 +34,8 @@ static const ShellCommand commands[] = {
   {"uid", cmd_uid},		// affiche le numéri d'identification unique du MCU
   {"param", cmd_param},		// fonction à but pedagogique qui affiche les
 				//   paramètres qui lui sont passés
+  {"send", cmd_send},		// envoi d'un message CAN
+  {"abrt", cmd_abrt},		// annulation d'un message CAN
   {NULL, NULL}			// marqueur de fin de tableau
 };
 
@@ -62,6 +66,78 @@ static void cmd_param(BaseSequentialStream *lchp, int argc,const char* const arg
     }
   }
 }
+
+
+static void display_can_slot_avalaibility(void)
+{
+  CANDriver *canp = &CAND1;
+  
+  for (uint32_t i=1; i<=CAN_TX_MAILBOXES; i++) {
+    chprintf(chp, "[%ld]=%d ", i, can_lld_is_tx_empty(canp, i));
+  }
+  chprintf(chp, "\r\n");
+  const uint32_t code = 1U + ((canp->can->TSR & CAN_TSR_CODE) >> CAN_TSR_CODE_Pos);
+
+  uint32_t mbi;
+  for(mbi =CAN_TX_MAILBOXES; mbi > 0; mbi--)
+    if(canp->can->TSR  & (CAN_TSR_LOW0 << (mbi-1)))
+      break;
+
+  uint32_t index;
+  for (index=1; index<=CAN_TX_MAILBOXES; index++)
+    if (can_lld_is_tx_empty(canp, index))
+      break;
+  if (index > CAN_TX_MAILBOXES) {
+    DebugTrace("all mailbox busy");
+    index = 0;
+    if (canp->can->sTxMailBox[index].TIR < canp->can->sTxMailBox[1].TIR)
+      index = 1;
+    if (canp->can->sTxMailBox[index].TIR < canp->can->sTxMailBox[2].TIR)
+      index = 2;
+    index++;
+  } else {
+        DebugTrace("still free mailbox");
+  }
+  
+  DebugTrace("code=%ld; mbi=%ld index=%ld", code, mbi, index);
+}
+
+static void cmd_send(BaseSequentialStream *lchp, int argc,const char* const argv[])
+{
+  if (argc != 2) {  
+    chprintf (lchp, "usage : send eid value\r\n");
+  } else {
+    const CANTxFrame txmsg = {
+			      .IDE = CAN_IDE_EXT,
+			      .EID = atoi(argv[0]),
+			      .RTR = CAN_RTR_DATA,
+			      .DLC = 4,
+			      .data32[0] = atoi(argv[1]),
+			      .data32[1] = 0};
+    msg_t status = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, chTimeMS2I(200));
+    DebugTrace ("canTransmit %s",  (status == MSG_OK) ? "SUCCESS" : "FAIL");
+    chThdSleepMilliseconds(100);
+    display_can_slot_avalaibility();
+  }
+}
+
+static void cmd_abrt(BaseSequentialStream *lchp, int argc,const char* const argv[])
+{
+  if (argc != 1) {  
+    chprintf (lchp, "usage : abrt mailbox (or 0 for anymailbox)\r\n");
+  } else {
+    const uint32_t mailbox = atoi(argv[0]);
+    if (mailbox <= CAN_TX_MAILBOXES) {
+      canSTM32AbortTransmission(&CAND1, atoi(argv[0]));
+      DebugTrace ("can abort query OK");
+    } else {
+      chprintf (lchp, "usage : abrt mailbox [0 1 2 3]");
+    }
+    chThdSleepMilliseconds(100);
+    display_can_slot_avalaibility();
+  }
+}
+
 
 
 /*
